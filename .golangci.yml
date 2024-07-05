@@ -1,0 +1,80 @@
+linters:
+  disable-all: true
+  enable:
+    - errcheck    # Checks for unchecked errors.
+    - errchkjson  # Checks types passed to the json encoding functions.
+    - copyloopvar # Detects places where loop variables are copied.
+    - cyclop      # Detects for-loops that will always evaluate to the same value.
+    - fatcontext  # Detects nested contexts in loops.
+    - gocritic    # Provides diagnostics that check for bugs, performance and style issues.
+    - goimports
+    - gosec
+    - gosimple
+    - gosmopolitan   # Report certain i18n/l10n anti-patterns in your Go codebase.
+    - govet
+    - ineffassign    # Detects when assignments to existing variables are not used.
+    - interfacebloat # A linter that checks number of methods in an interface
+    - staticcheck
+    - perfsprint # Checks that fmt.Sprintf can be replaced with a faster alternative.
+    - prealloc   # Finds slice declarations that could potentially be pre-allocated.
+
+run:
+  timeout: 5m
+
+issues:
+  exclude-rules:
+    # Exclude some gosec rules
+    - linters:
+        - gosec
+      text: |
+        G104 (CWE-703): Errors unhandled
+
+  exclude-use-default: false
+
+  # List of issues to be excluded from the report. They can be specified by the text
+  # of the issue or by the name of the rule that caused it. The name of the rule can
+  # be found in the documentation of the linter that reported the issue.
+  exclude:
+    - should have comment or be unexported
+    - comment on exported function
+
+  # List of paths to be excluded from the analysis
+  exclude-dirs:
+    - ./.git
+    - ./bin
+    - ./db
+    - ./docs
+    - ./frontend
+    - ./vendor
+  # List of files to be excluded from the analysis
+  exclude-files:
+    - ./.gitignore
+    - ./.golangci.yml
+    - ./conf1.yaml
+    - ./feeds.db
+    - ./Makefile
+    - ./README.md
+    - ./sqlc.yaml
+
+linters-settings:
+  cyclop:
+    # The maximal code complexity to report.
+    # Default: 10
+    max-complexity: 10
+    # The maximal average package complexity.
+    # If it's higher than 0.0 (float) the check is enabled
+    # Default: 0.0
+    package-average: 7.0
+    # Should ignore tests.
+    # Default: false
+    skip-tests: true
+  gosec:
+    # Available settings: G104, G106, G107, G201, G202, G204, G301, G302, G304, G305, G307, G401, G402, G403, G404, G501, G502, G503, G601
+    # To exclude rules, add them to the exclude-rules section above.
+    excludes:
+      - G104
+
+  staticcheck:
+    checks: ["all"]
+    # You can specify multiple checks like this:
+    # checks: ["SA1000", "SA1015", "ST1000", "ST1015"]
