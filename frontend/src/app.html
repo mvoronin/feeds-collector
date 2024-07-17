@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="stylesheet" href="/global.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  %sveltekit.head%
+</head>
+<body data-sveltekit-preload-data="hover">
+  <div id="app">
+    <div id="sidebar">
+      <div class="menu">
+        <div class="menu-item" on:click="{handleAddChannel}">Add Channel</div>
+        {#each $channels as channel}
+          <div class="menu-item" on:click={() => handleSelectChannel(channel)}>
+            {channel.host}
+          </div>
+        {/each}
+      </div>
+    </div>
+    <div id="content">
+      <div id="feed-item-list">
+        {#each $items as item}
+          <div class="feed-item" on:click={() => handleSelectItem(item)}>
+            {item.title}
+          </div>
+        {/each}
+      </div>
+      <div id="feed-item-content">
+        {#if selectedItem}
+          <h2>{selectedItem.title}</h2>
+          <p>{selectedItem.description}</p>
+        {/if}
+      </div>
+    </div>
+  </div>
+  %sveltekit.body%
+</body>
+</html>
