@@ -6,6 +6,7 @@ import (
 	"errors"
 	"feedscollector/internal"
 	"feedscollector/internal/models"
+	"feedscollector/pkg/utils"
 	"github.com/guregu/null"
 	"io"
 	"net/http"
@@ -16,6 +17,26 @@ import (
 
 	"github.com/mmcdole/gofeed"
 )
+
+func RunGathererLoop(ctx context.Context, db *sql.DB, config *utils.Config, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	FetchListFeedChannels(ctx, db)
+
+	ticker := time.NewTicker(config.FeedsUpdateInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			FetchListFeedChannels(ctx, db)
+		case <-ctx.Done():
+			return
+		default:
+			time.Sleep(10 * time.Second)
+		}
+	}
+}
 
 func FetchListFeedChannels(ctx context.Context, db *sql.DB) {
 	queries := models.New(db)

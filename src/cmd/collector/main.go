@@ -5,79 +5,19 @@ import (
 	"database/sql"
 	"errors"
 	"feedscollector/internal"
-	"feedscollector/internal/api"
 	"feedscollector/internal/gatherer"
-	"feedscollector/internal/utils"
+	"feedscollector/internal/server"
+	"feedscollector/pkg/utils"
 	"flag"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite"
+	_ "github.com/mattn/go-sqlite3"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
-
-	"github.com/gorilla/mux"
-	_ "github.com/mattn/go-sqlite3"
 )
-
-func runAPIServer(ctxWithCancel context.Context, db *sql.DB, config *utils.Config, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	port := config.Server.Port
-	if port == "" {
-		port = "8080" // Default port if not specified in config
-	}
-	log.Println("Starting web server on :", port)
-	apiInstance := api.NewAPI(db)
-
-	router := mux.NewRouter()
-	apiRouter := router.PathPrefix("/api").Subrouter()
-	apiInstance.RegisterRoutes(apiRouter)
-	http.Handle("/", api.AddCORSHeaders(router))
-
-	server := &http.Server{
-		Addr:              ":" + port,
-		ReadHeaderTimeout: 3 * time.Second,
-	}
-
-	go func() {
-		<-ctxWithCancel.Done()
-		shutdownCtx, shutdownRelease := context.WithTimeout(context.Background(), 4*time.Second)
-		defer shutdownRelease()
-		err := server.Shutdown(shutdownCtx)
-		if err != nil {
-			internal.ErrorLogger.Fatalf("Error shutting down server: %v", err)
-		}
-	}()
-
-	err := server.ListenAndServe()
-	if err != nil && !errors.Is(err, http.ErrServerClosed) {
-		internal.ErrorLogger.Fatalf("Error starting server: %v", err)
-	}
-}
-
-func runGathererLoop(ctx context.Context, db *sql.DB, config *utils.Config, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	gatherer.FetchListFeedChannels(ctx, db)
-
-	ticker := time.NewTicker(config.FeedsUpdateInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			gatherer.FetchListFeedChannels(ctx, db)
-		case <-ctx.Done():
-			return
-		default:
-			time.Sleep(10 * time.Second)
-		}
-	}
-}
 
 func runMigrations(db *sql.DB) error {
 	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
@@ -143,10 +83,10 @@ func main() {
 	ctxWithCancel, cancel := context.WithCancel(ctx)
 
 	wg.Add(1)
-	go runAPIServer(ctxWithCancel, db, config, &wg)
+	go server.RunAPIServer(ctxWithCancel, db, config, &wg)
 
 	wg.Add(1)
-	go runGathererLoop(ctxWithCancel, db, config, &wg)
+	go gatherer.RunGathererLoop(ctxWithCancel, db, config, &wg)
 
 	// Handle graceful shutdown on Ctrl+C
 	sigCh := make(chan os.Signal, 1)
