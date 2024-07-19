@@ -1,13 +1,13 @@
 package api
 
 import (
-	"FeedsCollector/internal/models"
-	"FeedsCollector/internal/utils"
 	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"feedscollector/internal/models"
+	"feedscollector/internal/utils"
 	"fmt"
 	"github.com/guregu/null"
 	"log"

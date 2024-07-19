@@ -1,9 +1,9 @@
 package api
 
 import (
-	"FeedsCollector/internal/models"
 	"database/sql"
 	"encoding/json"
+	"feedscollector/internal/models"
 	"net/http"
 	"strconv"
 

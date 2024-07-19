@@ -1,11 +1,11 @@
 package gatherer
 
 import (
-	"FeedsCollector/internal"
-	"FeedsCollector/internal/models"
 	"context"
 	"database/sql"
 	"errors"
+	"feedscollector/internal"
+	"feedscollector/internal/models"
 	"github.com/guregu/null"
 	"io"
 	"net/http"

@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"FeedsCollector/internal/models"
 	"errors"
+	"feedscollector/internal/models"
 	"fmt"
 	"reflect"
 )

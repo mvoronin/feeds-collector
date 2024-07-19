@@ -1,4 +1,4 @@
-module FeedsCollector
+module feedscollector
 
 go 1.22
 

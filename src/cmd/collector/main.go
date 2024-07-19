@@ -1,13 +1,13 @@
 package main
 
 import (
-	"FeedsCollector/internal"
-	"FeedsCollector/internal/api"
-	"FeedsCollector/internal/gatherer"
-	"FeedsCollector/internal/utils"
 	"context"
 	"database/sql"
 	"errors"
+	"feedscollector/internal"
+	"feedscollector/internal/api"
+	"feedscollector/internal/gatherer"
+	"feedscollector/internal/utils"
 	"flag"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite"
