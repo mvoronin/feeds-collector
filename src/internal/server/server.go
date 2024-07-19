@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"feedscollector/internal"
-	"feedscollector/pkg/utils"
+	"feedscollector/internal/infrastructure/config"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -22,14 +22,10 @@ func NewAPI(db *sql.DB) *API {
 	return &API{DB: db}
 }
 
-func RunAPIServer(ctxWithCancel context.Context, db *sql.DB, config *utils.Config, wg *sync.WaitGroup) {
+func RunAPIServer(ctxWithCancel context.Context, db *sql.DB, config *config.Config, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	port := config.Server.Port
-	if port == "" {
-		port = "8080" // Default port if not specified in config
-	}
-	log.Println("Starting web server on :", port)
+	log.Println("Starting web server on :", config.Server.Port)
 	apiInstance := NewAPI(db)
 
 	router := mux.NewRouter()
@@ -38,7 +34,7 @@ func RunAPIServer(ctxWithCancel context.Context, db *sql.DB, config *utils.Confi
 	http.Handle("/", AddCORSHeaders(router))
 
 	server := &http.Server{
-		Addr:              ":" + port,
+		Addr:              ":" + config.Server.Port,
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 

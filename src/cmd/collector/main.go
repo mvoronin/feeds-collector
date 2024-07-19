@@ -6,8 +6,8 @@ import (
 	"errors"
 	"feedscollector/internal"
 	"feedscollector/internal/gatherer"
+	"feedscollector/internal/infrastructure/config"
 	"feedscollector/internal/server"
-	"feedscollector/pkg/utils"
 	"flag"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite"
@@ -41,17 +41,19 @@ func runMigrations(db *sql.DB) error {
 }
 
 func main() {
-	configPath := flag.String("config", "config.yaml", "path to config file")
+	configPath := flag.String("config", "config.yaml", "path to cfg file")
 	flag.Parse()
 
-	config, err := utils.ReadConfig(*configPath)
+	log.Printf("Reading a cfg file: %s\n", *configPath)
+	cfg, err := config.ReadConfig(*configPath)
 	if err != nil {
-		log.Fatalf("Error reading config file: %v", err)
+		log.Fatalf("Error reading cfg file: %v", err)
+	}
+	if err := config.ValidateConfig(cfg); err != nil {
+		log.Fatalf("Invalid config: %v", err)
 	}
 
-	log.Printf("Reading a config file: %s\n", *configPath)
-
-	closeInfoLogFile, err := internal.InitLogging(config.Logging.InfoLog, internal.InfoLogLevel)
+	closeInfoLogFile, err := internal.InitLogging(cfg.Logging.InfoLog, internal.InfoLogLevel)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,7 +61,7 @@ func main() {
 		defer closeInfoLogFile()
 	}
 
-	closeErrorLogFiles, err := internal.InitLogging(config.Logging.ErrorLog, internal.ErrorLogLevel)
+	closeErrorLogFiles, err := internal.InitLogging(cfg.Logging.ErrorLog, internal.ErrorLogLevel)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -67,7 +69,7 @@ func main() {
 		defer closeErrorLogFiles()
 	}
 
-	db, err := sql.Open("sqlite3", config.Database.Path)
+	db, err := sql.Open("sqlite3", cfg.Database.Path)
 	if err != nil {
 		internal.ErrorLogger.Fatalf("Error opening database: %v", err)
 	}
@@ -83,10 +85,10 @@ func main() {
 	ctxWithCancel, cancel := context.WithCancel(ctx)
 
 	wg.Add(1)
-	go server.RunAPIServer(ctxWithCancel, db, config, &wg)
+	go server.RunAPIServer(ctxWithCancel, db, cfg, &wg)
 
 	wg.Add(1)
-	go gatherer.RunGathererLoop(ctxWithCancel, db, config, &wg)
+	go gatherer.RunGathererLoop(ctxWithCancel, db, cfg, &wg)
 
 	// Handle graceful shutdown on Ctrl+C
 	sigCh := make(chan os.Signal, 1)
