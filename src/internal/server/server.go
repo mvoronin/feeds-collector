@@ -7,6 +7,7 @@ import (
 	"feedscollector/internal"
 	"feedscollector/internal/infrastructure/config"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	"log"
 	"net/http"
 	"time"
@@ -28,7 +29,19 @@ func RunAPIServer(ctxWithCancel context.Context, db *sql.DB, config *config.Conf
 	router := mux.NewRouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()
 	apiInstance.RegisterRoutes(apiRouter)
-	http.Handle("/", AddCORSHeaders(router))
+	c := cors.New(cors.Options{
+		// TODO: добавить в конфиг имя домена, чтобы можно было запускать на сервере
+		AllowedOrigins:   []string{"http://localhost:" + config.Server.Port},
+		AllowCredentials: true,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		// Будет нужно если спрячу за Nginx c HTTP аутентификацией
+		//AllowedHeaders:      []string{"Content-Type", "Authorization"},
+		AllowPrivateNetwork: false,
+		MaxAge:              60 * 60,
+		// Enable Debugging for testing, consider disabling in production
+		Debug: true, // TODO: read from the ENVIRONMENT?
+	})
+	http.Handle("/", c.Handler(router))
 
 	server := &http.Server{
 		Addr:              ":" + config.Server.Port,
