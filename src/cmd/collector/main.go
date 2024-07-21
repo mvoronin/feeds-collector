@@ -15,7 +15,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 )
 
@@ -80,15 +79,10 @@ func main() {
 		}
 	}(db)
 
-	var wg sync.WaitGroup // нужна ли мне эта WaitGroup?
 	ctx := context.Background()
 	ctxWithCancel, cancel := context.WithCancel(ctx)
-
-	wg.Add(1)
-	go server.RunAPIServer(ctxWithCancel, db, cfg, &wg)
-
-	wg.Add(1)
-	go gatherer.RunGathererLoop(ctxWithCancel, db, cfg, &wg)
+	go server.RunAPIServer(ctxWithCancel, db, cfg)
+	go gatherer.RunGathererLoop(ctxWithCancel, db, cfg)
 
 	// Handle graceful shutdown on Ctrl+C
 	sigCh := make(chan os.Signal, 1)
@@ -96,5 +90,4 @@ func main() {
 	<-sigCh
 
 	cancel()
-	wg.Wait()
 }

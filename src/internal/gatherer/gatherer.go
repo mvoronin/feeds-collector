@@ -18,9 +18,7 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-func RunGathererLoop(ctx context.Context, db *sql.DB, config *config.Config, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func RunGathererLoop(ctx context.Context, db *sql.DB, config *config.Config) {
 	FetchListFeedChannels(ctx, db)
 
 	ticker := time.NewTicker(config.Gatherer.Interval)

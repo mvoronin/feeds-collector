@@ -9,7 +9,6 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
-	"sync"
 	"time"
 )
 
@@ -22,9 +21,7 @@ func NewAPI(db *sql.DB) *API {
 	return &API{DB: db}
 }
 
-func RunAPIServer(ctxWithCancel context.Context, db *sql.DB, config *config.Config, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func RunAPIServer(ctxWithCancel context.Context, db *sql.DB, config *config.Config) {
 	log.Println("Starting web server on :", config.Server.Port)
 	apiInstance := NewAPI(db)
 
