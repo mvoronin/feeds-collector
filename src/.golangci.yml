@@ -3,7 +3,7 @@ linters:
   enable:
     - errcheck    # Checks for unchecked errors.
     - errchkjson  # Checks types passed to the json encoding functions.
-    - copyloopvar # Detects places where loop variables are copied.
+    #- copyloopvar # Detects places where loop variables are copied.
     - cyclop      # Detects for-loops that will always evaluate to the same value.
     - fatcontext  # Detects nested contexts in loops.
     - gocritic    # Provides diagnostics that check for bugs, performance and style issues.

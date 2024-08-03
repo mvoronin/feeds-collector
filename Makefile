@@ -6,6 +6,8 @@ GO_VERSION = 1.22.0
 # Path to the sqlc configuration file
 SQLC_CONFIG = sqlc.yaml
 
+ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+
 # Default target: generate
 all: generate
 
@@ -32,7 +34,8 @@ mod-tidy:
 	go mod tidy
 
 lint:
-	golangci-lint run
+	@echo "Linting the project..."
+	cd $(ROOT_DIR)/src && golangci-lint --config .golangci.yml run --timeout 3m
 
 # Build the project
 build:

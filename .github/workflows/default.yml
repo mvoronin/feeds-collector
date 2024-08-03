@@ -27,9 +27,11 @@ jobs:
         cache: false
     - name: golangci-lint
       uses: golangci/golangci-lint-action@v6
+      timeout-minutes: 3
       with:
         version: latest
-        args: --timeout 3m --config src/.golangci.yml --out-format=line-number
+        working-directory: src
+        args: --config .golangci.yml --out-format=line-number
 
   tests:
     name: Tests
