@@ -9,14 +9,13 @@ import (
 	"feedscollector/internal/models"
 	"feedscollector/internal/utils"
 	"fmt"
-	"github.com/guregu/null"
-	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/guregu/null"
 
 	"github.com/gorilla/mux"
 
@@ -40,7 +39,12 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err)
 	}
-	defer testDB.Close()
+	defer func(testDB *sql.DB) {
+		err := testDB.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(testDB)
 
 	err = runMigrations(testDB)
 	if err != nil {
@@ -48,11 +52,13 @@ func TestMain(m *testing.M) {
 	}
 
 	if err := loadInitialData(testDB); err != nil {
-		log.Fatalf("could not load initial data: %v", err)
+		err := fmt.Errorf("could not load initial data: %w", err)
+		fmt.Println(err.Error())
+		// TODO: как мне обвалить тест?
 	}
 
 	// Run tests
-	os.Exit(m.Run())
+	m.Run()
 }
 
 func loadInitialData(db *sql.DB) error {

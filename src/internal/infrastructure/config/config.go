@@ -1,12 +1,13 @@
 package config
 
 import (
-	"gopkg.in/yaml.v3"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 // Config represents the application configuration

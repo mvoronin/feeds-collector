@@ -3,43 +3,20 @@ package main
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"feedscollector/internal"
 	"feedscollector/internal/gatherer"
 	"feedscollector/internal/infrastructure/config"
 	"feedscollector/internal/server"
 	"flag"
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/sqlite"
-	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
-func runMigrations(db *sql.DB) error {
-	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
-	if err != nil {
-		return err
-	}
-
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://db/migrations",
-		"sqlite3", driver)
-	if err != nil {
-		return err
-	}
-
-	err = m.Up()
-	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return err
-	}
-
-	return nil
-}
-
-func main() {
+func parseConfig() *config.Config {
 	configPath := flag.String("config", "config.yaml", "path to cfg file")
 	flag.Parse()
 
@@ -51,6 +28,11 @@ func main() {
 	if err := config.ValidateConfig(cfg); err != nil {
 		log.Fatalf("Invalid config: %v", err)
 	}
+	return cfg
+}
+
+func main() {
+	cfg := parseConfig()
 
 	closeInfoLogFile, err := internal.InitLogging(cfg.Logging.InfoLog, internal.InfoLogLevel)
 	if err != nil {

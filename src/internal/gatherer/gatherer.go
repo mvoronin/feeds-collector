@@ -7,13 +7,14 @@ import (
 	"feedscollector/internal"
 	"feedscollector/internal/infrastructure/config"
 	"feedscollector/internal/models"
-	"github.com/guregu/null"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/guregu/null"
 
 	"github.com/mmcdole/gofeed"
 )

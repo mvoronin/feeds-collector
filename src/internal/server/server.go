@@ -6,11 +6,12 @@ import (
 	"errors"
 	"feedscollector/internal"
 	"feedscollector/internal/infrastructure/config"
-	"github.com/gorilla/mux"
-	"github.com/rs/cors"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 // API struct holds the database connection and router

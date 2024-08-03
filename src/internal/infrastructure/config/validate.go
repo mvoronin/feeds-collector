@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -16,7 +17,7 @@ func ValidateConfig(config *Config) error {
 		return fmt.Errorf("invalid server.port: %v", err)
 	}
 	if port <= 1024 || port > 65535 {
-		return fmt.Errorf("server.port must be between 1025 and 65535")
+		return errors.New("server.port must be between 1025 and 65535")
 	}
 
 	if config.Database.Path == "" {

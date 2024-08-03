@@ -35,7 +35,7 @@ mod-tidy:
 
 lint:
 	@echo "Linting the project..."
-	cd $(ROOT_DIR)/src && golangci-lint --config .golangci.yml run --timeout 3m
+	cd $(ROOT_DIR)/src && golangci-lint --config .golangci.yml run -v --fix
 
 # Build the project
 build:
