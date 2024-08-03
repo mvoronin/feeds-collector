@@ -1,0 +1,68 @@
+name: default
+
+on:
+  push:
+    branches: [ "**" ]
+    paths:
+      - "src/**.go"
+  pull_request:
+    branches: [ "**" ]
+    types: [synchronize, opened, reopened, ready_for_review]  # don't start on a draft PR
+    paths:
+      - "src/**.go"
+
+jobs:
+  linter:
+    name: Static code analysis (golangci-lint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.22
+        cache: false
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v6
+      with:
+        version: latest
+        args: --timeout 3m --config src/.golangci.yml --skip-dirs=src/internal/infrastructure/persistence --skip-files=src/sqlc.yaml
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+    needs: [linter]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22'
+        cache: false
+    - name: Test
+      run: |
+        go test -C src -v ./...
+
+  build:
+    name: Trying to build
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+    needs: [tests]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.22
+        cache: false
+    - name: Build
+      run: |
+        go build -C src -v ./...
