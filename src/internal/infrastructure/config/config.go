@@ -40,8 +40,8 @@ type GathererConfig struct {
 }
 
 // ReadConfig reads the configuration from a YAML file
-func ReadConfig(configPath string) (*Config, error) {
-	configFile, err := os.Open(filepath.Clean(configPath))
+func ReadConfig(configPath *string) (*Config, error) {
+	configFile, err := os.Open(filepath.Clean(*configPath))
 	if err != nil {
 		log.Printf("Error opening config file: %v", err)
 		return nil, err

@@ -16,23 +16,17 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func parseConfig() *config.Config {
-	configPath := flag.String("config", "config.yaml", "path to cfg file")
+func main() {
 	flag.Parse()
 
-	log.Printf("Reading a cfg file: %s\n", *configPath)
-	cfg, err := config.ReadConfig(*configPath)
+	configPath := flag.String("config", "config.yaml", "path to cfg file")
+	cfg, err := config.ReadConfig(configPath)
 	if err != nil {
 		log.Fatalf("Error reading cfg file: %v", err)
 	}
-	if err := config.ValidateConfig(cfg); err != nil {
+	if err := cfg.Validate(); err != nil {
 		log.Fatalf("Invalid config: %v", err)
 	}
-	return cfg
-}
-
-func main() {
-	cfg := parseConfig()
 
 	closeInfoLogFile, err := internal.InitLogging(cfg.Logging.InfoLog, internal.InfoLogLevel)
 	if err != nil {

@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// ValidateConfig validates the configuration and sets default values
-func ValidateConfig(config *Config) error {
+// Validate validates the configuration and sets default values
+func (config Config) Validate() error {
 	if config.Server.Port == "" {
 		config.Server.Port = "8080" // Default port
 	}
