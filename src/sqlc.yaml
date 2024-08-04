@@ -1,0 +1,67 @@
+version: "2"
+sql:
+  - schema: internal/schema.sql
+    queries: internal/queries.sql
+    engine: sqlite
+    gen:
+      go:
+        package: models
+        out: internal/models
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: false
+        emit_exact_table_names: false
+        overrides:
+          - column: feed_channel.link
+            go_struct_tag: validate:"required,url"
+          - column: feed_channel.title
+            go_struct_tag: validate:"required,min=5,max=20"
+          - column: feed_item.description
+            go_struct_tag: validate:"min=50,max=600"
+            nullable: true
+          - column: feed_channel.enabled
+            go_type: bool
+          - column: feed_channel.published
+            go_struct_tag: validate:"required" json:"published"
+            nullable: true
+            go_type:
+              import: "github.com/guregu/null"
+              package: "null"
+              type: Time
+          - column: feed_item.guid
+            go_struct_tag: validate:"required" json:"guid,omitempty"
+            nullable: true
+            go_type:
+              import: "github.com/guregu/null"
+              package: "null"
+              type: String
+          - column: feed_item.description
+            go_struct_tag: validate:"required" json:"description,omitempty"
+            nullable: true
+            go_type:
+              import: "github.com/guregu/null"
+              package: "null"
+              type: String
+          - column: feed_item.author
+            go_struct_tag: validate:"required" json:"author,omitempty"
+            nullable: true
+            go_type:
+              type: string
+              pointer: true
+          - column: feed_item.read
+            go_type: bool
+          - column: feed_item.published
+            go_struct_tag: validate:"required" json:"published"
+            nullable: true
+            go_type:
+              import: "github.com/guregu/null"
+              package: "null"
+              type: Time
+          - column: feed_item.deleted
+            go_type: bool
+          - column: feed_channel_item.channel_id
+            go_struct_tag: validate:"required" json:"channel_id"
+            nullable: false
+          - column: feed_channel_item.item_id
+            go_struct_tag: validate:"required" json:"item_id"
+            nullable: false
