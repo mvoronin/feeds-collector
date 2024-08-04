@@ -1,9 +1,12 @@
 linters:
   disable-all: true
   enable:
+    - asasalint   # Check for pass []any as any in variadic func(...any).
+    - asciicheck  # Checks that all code identifiers does not have non-ASCII symbols in the name.
+    - bidichk     # Checks for dangerous unicode character sequences.
     - errcheck    # Checks for unchecked errors.
     - errchkjson  # Checks types passed to the json encoding functions.
-    - copyloopvar # Detects places where loop variables are copied.
+    #- copyloopvar # Detects places where loop variables are copied.
     - cyclop      # Detects for-loops that will always evaluate to the same value.
     - fatcontext  # Detects nested contexts in loops.
     - gocritic    # Provides diagnostics that check for bugs, performance and style issues.
@@ -17,6 +20,7 @@ linters:
     - staticcheck
     - perfsprint # Checks that fmt.Sprintf can be replaced with a faster alternative.
     - prealloc   # Finds slice declarations that could potentially be pre-allocated.
+    - unused     # Checks Go code for unused constants, variables, functions and types.
 
 run:
   timeout: 5m
@@ -68,6 +72,7 @@ linters-settings:
     # Should ignore tests.
     # Default: false
     skip-tests: true
+
   gosec:
     # Available settings: G104, G106, G107, G201, G202, G204, G301, G302, G304, G305, G307, G401, G402, G403, G404, G501, G502, G503, G601
     # To exclude rules, add them to the exclude-rules section above.
