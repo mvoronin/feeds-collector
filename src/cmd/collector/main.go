@@ -6,6 +6,7 @@ import (
 	"feedscollector/internal"
 	"feedscollector/internal/gatherer"
 	"feedscollector/internal/infrastructure/config"
+	"feedscollector/internal/infrastructure/persistence"
 	"feedscollector/internal/server"
 	"flag"
 	"log"
@@ -28,21 +29,16 @@ func main() {
 		log.Fatalf("Invalid config: %v", err)
 	}
 
-	closeInfoLogFile, err := internal.InitLogging(cfg.Logging.InfoLog, internal.InfoLogLevel)
+	closeInfoLoggingFunc, err := internal.InitLogging(cfg.Logging.InfoLog, internal.InfoLogLevel)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error initializing logging: %v", err)
 	}
-	if closeInfoLogFile != nil {
-		defer closeInfoLogFile()
-	}
-
-	closeErrorLogFiles, err := internal.InitLogging(cfg.Logging.ErrorLog, internal.ErrorLogLevel)
+	defer closeInfoLoggingFunc()
+	closeErrorLoggingFunc, err := internal.InitLogging(cfg.Logging.ErrorLog, internal.ErrorLogLevel)
 	if err != nil {
-		log.Panic(err)
+		log.Fatalf("Error initializing logging: %v", err)
 	}
-	if closeErrorLogFiles != nil {
-		defer closeErrorLogFiles()
-	}
+	defer closeErrorLoggingFunc()
 
 	db, err := sql.Open("sqlite3", cfg.Database.Path)
 	if err != nil {
@@ -54,6 +50,11 @@ func main() {
 			internal.ErrorLogger.Fatalf("Error closing database: %v", err)
 		}
 	}(db)
+
+	// Run migrations
+	if err := persistence.Migrate(db); err != nil {
+		log.Fatalf("Error running migrations: %v", err)
+	}
 
 	ctx := context.Background()
 	ctxWithCancel, cancel := context.WithCancel(ctx)
