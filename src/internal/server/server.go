@@ -6,6 +6,7 @@ import (
 	"errors"
 	"feedscollector/internal"
 	"feedscollector/internal/infrastructure/config"
+	"feedscollector/internal/models"
 	"log"
 	"net/http"
 	"time"
@@ -16,11 +17,15 @@ import (
 
 // API struct holds the database connection and router
 type API struct {
-	DB *sql.DB
+	DB      *sql.DB
+	Queries *models.Queries
 }
 
 func NewAPI(db *sql.DB) *API {
-	return &API{DB: db}
+	return &API{
+		DB:      db,
+		Queries: models.New(db),
+	}
 }
 
 func RunAPIServer(ctxWithCancel context.Context, db *sql.DB, config *config.Config) {
@@ -71,7 +76,7 @@ func (api *API) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/channels/{id}", api.UpdateChannel).Methods("PUT")
 	router.HandleFunc("/channels/{id}", api.PatchChannel).Methods("PATCH")
 	router.HandleFunc("/channels/{id}", api.DeleteChannel).Methods("DELETE")
-	router.HandleFunc("/channels/{id}/items", api.listItems).Methods("GET")
+	router.HandleFunc("/channels/{id}/items", api.ListItems).Methods("GET")
 	router.HandleFunc("/channels/{channel_id}/items/{item_id}", api.RemoveItemFromChannel).Methods("DELETE")
 	router.HandleFunc("/items/{id}", api.PatchItem).Methods("PATCH")
 	router.HandleFunc("/items/{id}", api.DeleteItem).Methods("DELETE")
