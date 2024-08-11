@@ -18,27 +18,20 @@ import (
 )
 
 func main() {
-	flag.Parse()
+	if err := run(); err != nil {
+		log.Fatalf("Application failed: %v", err)
+	}
+}
 
-	configPath := flag.String("config", "config.yaml", "path to cfg file")
-	cfg, err := config.ReadConfig(configPath)
+func run() error {
+	cfg, err := loadConfig()
 	if err != nil {
-		log.Fatalf("Error reading cfg file: %v", err)
-	}
-	if err := cfg.Validate(); err != nil {
-		log.Fatalf("Invalid config: %v", err)
+		return err
 	}
 
-	closeInfoLoggingFunc, err := internal.InitLogging(cfg.Logging.InfoLog, internal.InfoLogLevel)
-	if err != nil {
-		log.Fatalf("Error initializing logging: %v", err)
+	if err := setupLogging(cfg); err != nil {
+		return err
 	}
-	defer closeInfoLoggingFunc()
-	closeErrorLoggingFunc, err := internal.InitLogging(cfg.Logging.ErrorLog, internal.ErrorLogLevel)
-	if err != nil {
-		log.Fatalf("Error initializing logging: %v", err)
-	}
-	defer closeErrorLoggingFunc()
 
 	db, err := sql.Open("sqlite3", cfg.Database.Path)
 	if err != nil {
@@ -53,7 +46,7 @@ func main() {
 
 	// Run migrations
 	if err := persistence.Migrate(db); err != nil {
-		log.Fatalf("Error running migrations: %v", err)
+		return err
 	}
 
 	ctx := context.Background()
@@ -62,9 +55,44 @@ func main() {
 	go gatherer.RunGathererLoop(ctxWithCancel, db, cfg)
 
 	// Handle graceful shutdown on Ctrl+C
+	handleShutdown(cancel)
+
+	return nil
+}
+
+func loadConfig() (*config.Config, error) {
+	configPath := flag.String("config", "config.yaml", "path to config file")
+	flag.Parse()
+
+	cfg, err := config.ReadConfig(configPath)
+	if err != nil {
+		return nil, err
+	}
+	if err := cfg.Validate(); err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
+
+func setupLogging(cfg *config.Config) error {
+	closeInfoLoggingFunc, err := internal.InitLogging(cfg.Logging.InfoLog, internal.InfoLogLevel)
+	if err != nil {
+		return err
+	}
+	defer closeInfoLoggingFunc()
+
+	closeErrorLoggingFunc, err := internal.InitLogging(cfg.Logging.ErrorLog, internal.ErrorLogLevel)
+	if err != nil {
+		return err
+	}
+	defer closeErrorLoggingFunc()
+
+	return nil
+}
+
+func handleShutdown(cancel context.CancelFunc) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 	<-sigCh
-
 	cancel()
 }
