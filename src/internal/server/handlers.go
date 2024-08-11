@@ -1,51 +1,17 @@
-package api
+package server
 
 import (
-	"FeedsCollector/internal/models"
-	"database/sql"
 	"encoding/json"
+	"feedscollector/internal/models"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 )
 
-// API struct holds the database connection and router
-type API struct {
-	DB *sql.DB
-}
-
-func NewAPI(db *sql.DB) *API {
-	return &API{DB: db}
-}
-
-func (api *API) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/channels", api.ListChannels).Methods("GET")
-	router.HandleFunc("/channels", api.AddChannel).Methods("POST")
-	router.HandleFunc("/channels/{id}", api.UpdateChannel).Methods("PUT")
-	router.HandleFunc("/channels/{id}", api.PatchChannel).Methods("PATCH")
-	router.HandleFunc("/channels/{id}", api.DeleteChannel).Methods("DELETE")
-	router.HandleFunc("/channels/{id}/items", api.listItems).Methods("GET")
-	router.HandleFunc("/channels/{channel_id}/items/{item_id}", api.RemoveItemFromChannel).Methods("DELETE")
-	router.HandleFunc("/items/{id}", api.PatchItem).Methods("PATCH")
-	router.HandleFunc("/items/{id}", api.DeleteItem).Methods("DELETE")
-	// TODO: router.HandleFunc("/tags", api.ListTags).Methods("GET")
-	// TODO: add tag to channel
-	// TODO: remove tag from channel
-	// TODO: add tag to item
-	// TODO: remove tag from item
-	router.HandleFunc("/groups", api.ListGroups).Methods("GET")
-	router.HandleFunc("/groups", api.AddGroup).Methods("POST")
-	router.HandleFunc("/groups/{id}", api.UpdateGroup).Methods("PUT")
-	router.HandleFunc("/groups/{id}", api.DeleteGroup).Methods("DELETE")
-	router.HandleFunc("/groups", api.AddChannelToGroup).Methods("POST")
-	router.HandleFunc("/groups", api.RemoveChannelFromGroup).Methods("DELETE")
-}
-
 func (api *API) ListChannels(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	queries := models.New(api.DB)
-	channels, err := queries.ListAllFeedChannel(ctx)
+	channels, err := api.Queries.ListAllFeedChannel(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -67,8 +33,7 @@ func (api *API) AddChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	queries := models.New(api.DB)
-	if _, err := queries.CreateFeedChannel(ctx, params); err != nil {
+	if _, err := api.Queries.CreateFeedChannel(ctx, params); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -85,8 +50,7 @@ func (api *API) UpdateChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	queries := models.New(api.DB)
-	if err := queries.UpdateFeedChannel(ctx, params); err != nil {
+	if err := api.Queries.UpdateFeedChannel(ctx, params); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -102,8 +66,7 @@ func (api *API) DeleteChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	queries := models.New(api.DB)
-	if err := queries.DeleteFeedChannel(ctx, id); err != nil {
+	if err := api.Queries.DeleteFeedChannel(ctx, id); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -111,7 +74,7 @@ func (api *API) DeleteChannel(w http.ResponseWriter, r *http.Request) {
 }
 
 // ListItems handles GET requests to list all items of a channel
-func (api *API) listItems(w http.ResponseWriter, r *http.Request) {
+func (api *API) ListItems(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
@@ -119,8 +82,7 @@ func (api *API) listItems(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	queries := models.New(api.DB)
-	items, err := queries.ListFeedItem(ctx, id)
+	items, err := api.Queries.ListFeedItem(ctx, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -144,12 +106,11 @@ func (api *API) RemoveItemFromChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	queries := models.New(api.DB)
 	params := models.RemoveFeedItemFromChannelParams{
 		ChannelID: channelId,
 		ItemID:    itemId,
 	}
-	if err := queries.RemoveFeedItemFromChannel(ctx, params); err != nil {
+	if err := api.Queries.RemoveFeedItemFromChannel(ctx, params); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -165,8 +126,7 @@ func (api *API) DeleteItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	queries := models.New(api.DB)
-	if err := queries.DeleteFeedItem(ctx, id); err != nil {
+	if err := api.Queries.DeleteFeedItem(ctx, id); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -183,8 +143,7 @@ func (api *API) PatchChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	queries := models.New(api.DB)
-	if err := queries.UpdateFeedChannel(ctx, params); err != nil {
+	if err := api.Queries.UpdateFeedChannel(ctx, params); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -201,8 +160,7 @@ func (api *API) PatchItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	queries := models.New(api.DB)
-	if err := queries.UpdateFeedItem(ctx, params); err != nil {
+	if err := api.Queries.UpdateFeedItem(ctx, params); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -211,8 +169,7 @@ func (api *API) PatchItem(w http.ResponseWriter, r *http.Request) {
 
 func (api *API) ListGroups(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	queries := models.New(api.DB)
-	groups, err := queries.ListGroup(ctx)
+	groups, err := api.Queries.ListGroup(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -234,8 +191,7 @@ func (api *API) AddGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	queries := models.New(api.DB)
-	if err := queries.CreateGroup(ctx, params); err != nil {
+	if err := api.Queries.CreateGroup(ctx, params); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -252,8 +208,7 @@ func (api *API) UpdateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	queries := models.New(api.DB)
-	if err := queries.UpdateGroup(ctx, params); err != nil {
+	if err := api.Queries.UpdateGroup(ctx, params); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -269,8 +224,7 @@ func (api *API) DeleteGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	queries := models.New(api.DB)
-	if err := queries.DeleteGroup(ctx, id); err != nil {
+	if err := api.Queries.DeleteGroup(ctx, id); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -287,8 +241,7 @@ func (api *API) AddChannelToGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	queries := models.New(api.DB)
-	if err := queries.AddChannelToGroup(ctx, params); err != nil {
+	if err := api.Queries.AddChannelToGroup(ctx, params); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -305,8 +258,7 @@ func (api *API) RemoveChannelFromGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	queries := models.New(api.DB)
-	if err := queries.RemoveChannelFromGroup(ctx, params); err != nil {
+	if err := api.Queries.RemoveChannelFromGroup(ctx, params); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

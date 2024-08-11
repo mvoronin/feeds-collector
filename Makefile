@@ -6,6 +6,8 @@ GO_VERSION = 1.22.0
 # Path to the sqlc configuration file
 SQLC_CONFIG = sqlc.yaml
 
+ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+
 # Default target: generate
 all: generate
 
@@ -32,13 +34,13 @@ mod-tidy:
 	go mod tidy
 
 lint:
-	golangci-lint run
+	@echo "Linting the project..."
+	cd $(ROOT_DIR)/src && golangci-lint --config .golangci.yml run -v --fix
 
 # Build the project
 build:
 	@echo "Building the project..."
-	go build -o bin/gatherer cmd/gatherer/main.go
-	go build -o bin/api cmd/api/main.go
+	cd $(ROOT_DIR)/src && go build -o ${ROOT_DIR}/bin/feedscollector $(ROOT_DIR)/src/cmd/collector/main.go
 
 # Run the gatherer
 run:
