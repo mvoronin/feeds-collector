@@ -1,0 +1,170 @@
+openapi: 3.0.1
+info:
+  title: FeedsCollector API
+  description: API for managing feed channels and items
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local server
+
+paths:
+  /channels:
+    get:
+      summary: List all feed channels
+      description: Get a list of all feed channels
+      tags:
+        - feed_channels
+      responses:
+        '200':
+          description: A list of feed channels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeedChannel'
+        '500':
+          description: Internal server error
+    post:
+      summary: Add a new feed channel
+      description: Add a new feed channel
+      tags:
+        - feed_channels
+      requestBody:
+        description: Feed channel to add
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFeedChannelParams'
+      responses:
+        '201':
+          description: Feed channel created
+        '400':
+          description: Invalid input
+        '500':
+          description: Internal server error
+
+  /channels/{id}:
+    delete:
+      summary: Delete a feed channel
+      description: Delete a feed channel
+      tags:
+        - feed_channels
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Feed Channel ID
+      responses:
+        '204':
+          description: Feed channel deleted
+        '400':
+          description: Invalid ID supplied
+        '500':
+          description: Internal server error
+
+  /channels/{id}/items:
+    get:
+      summary: List all feed items of a channel
+      description: Get a list of all feed items of a channel
+      tags:
+        - feed_items
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Feed Channel ID
+      responses:
+        '200':
+          description: A list of feed items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeedItem'
+        '400':
+          description: Invalid ID supplied
+        '500':
+          description: Internal server error
+
+  /items/{id}:
+    delete:
+      summary: Delete a feed item
+      description: Delete a feed item
+      tags:
+        - feed_items
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Feed Item ID
+      responses:
+        '204':
+          description: Feed item deleted
+        '400':
+          description: Invalid ID supplied
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    FeedChannel:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Tech News"
+        link:
+          type: string
+          example: "http://example.com/rss"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2023-05-20T14:57:00Z"
+
+    CreateFeedChannelParams:
+      type: object
+      required:
+        - name
+        - link
+      properties:
+        name:
+          type: string
+          example: "Tech News"
+        link:
+          type: string
+          example: "http://example.com/rss"
+
+    FeedItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        channel_id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "New Tech Trends"
+        description:
+          type: string
+          example: "Latest updates in technology..."
+        link:
+          type: string
+          example: "http://example.com/new-tech-trends"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2023-05-20T14:57:00Z"
